@@ -1,26 +1,186 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 레이어 밖에 쓴 규칙은 Tailwind 유틸리티보다 우선하므로, 배경/글자색은 반드시 테마 변수를 따라야 한다. */
+html {
+  background: var(--color-gray-50);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-gray-50);
+  color: var(--color-gray-900);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ---------- 테마 ----------
+   컴포넌트는 Tailwind의 gray/indigo 팔레트를 쓴다. 테마는 그 팔레트 변수를 덮어써서 바꾼다.
+   (indigo = 포인트 색, gray = 배경/글자/테두리). 라이트가 기본값이라 별도 선언이 없다. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --color-gray-50: #0b1020;
+  --color-gray-100: #1a2233;
+  --color-gray-200: #2a3446;
+  --color-gray-300: #3c4860;
+  --color-gray-400: #8793a8;
+  --color-gray-500: #9aa5b8;
+  --color-gray-600: #b4bdcc;
+  --color-gray-700: #ccd3de;
+  --color-gray-800: #e2e7ee;
+  --color-gray-900: #f1f4f8;
+  --color-gray-950: #ffffff;
+  --color-indigo-50: #17163a;
+  --color-indigo-100: #24225a;
+  --color-indigo-200: #3a38a0;
+  --color-indigo-300: #4f52c4;
+  --color-indigo-400: #6366f1;
+  --color-indigo-500: #6a6df0;
+  --color-indigo-600: #6c70f3;
+  --color-indigo-700: #7a7ff5;
+  --color-indigo-800: #8b90f8;
+  --color-indigo-900: #a5aafb;
+  --color-indigo-950: #c7cafd;
+}
+html[data-theme="dark"] .bg-white {
+  background-color: #121a2b;
+}
+
+html[data-theme="ramen"] {
+  --color-gray-50: #fffaf5;
+  --color-gray-100: #f6efe8;
+  --color-gray-200: #eadfd4;
+  --color-gray-300: #d6c6b6;
+  --color-gray-400: #a89684;
+  --color-gray-500: #7d6c5c;
+  --color-gray-600: #5f5144;
+  --color-gray-700: #463b31;
+  --color-gray-800: #2f2823;
+  --color-gray-900: #1f1a16;
+  --color-gray-950: #120e0b;
+  --color-indigo-50: #fff1ee;
+  --color-indigo-100: #ffe0d8;
+  --color-indigo-200: #ffc2b3;
+  --color-indigo-300: #ff9d85;
+  --color-indigo-400: #ff7452;
+  --color-indigo-500: #f04a24;
+  --color-indigo-600: #d93a14;
+  --color-indigo-700: #b52e10;
+  --color-indigo-800: #8f260f;
+  --color-indigo-900: #6e1f0e;
+  --color-indigo-950: #451208;
+}
+
+html[data-theme="mint"] {
+  --color-gray-50: #f4faf7;
+  --color-gray-100: #e6f2ec;
+  --color-gray-200: #d3e6dc;
+  --color-gray-300: #b5d1c3;
+  --color-gray-400: #8aa89a;
+  --color-gray-500: #66857a;
+  --color-gray-600: #4d6a5f;
+  --color-gray-700: #3a5248;
+  --color-gray-800: #27382f;
+  --color-gray-900: #16231d;
+  --color-gray-950: #0c1511;
+  --color-indigo-50: #ecfdf5;
+  --color-indigo-100: #d1fae5;
+  --color-indigo-200: #a7f3d0;
+  --color-indigo-300: #6ee7b7;
+  --color-indigo-400: #34d399;
+  --color-indigo-500: #10b981;
+  --color-indigo-600: #059669;
+  --color-indigo-700: #047857;
+  --color-indigo-800: #065f46;
+  --color-indigo-900: #064e3b;
+  --color-indigo-950: #022c22;
+}
+
+/* 다크: 색상 칩 */
+html[data-theme="dark"] .bg-emerald-50 { background-color: rgba(16,185,129, .12); }
+html[data-theme="dark"] .bg-emerald-100 { background-color: rgba(16,185,129, .16); }
+html[data-theme="dark"] .bg-emerald-200 { background-color: rgba(16,185,129, .24); }
+html[data-theme="dark"] :is(.text-emerald-700, .text-emerald-800, .text-emerald-900) { color: #6ee7b7; }
+html[data-theme="dark"] .bg-rose-50 { background-color: rgba(244,63,94, .12); }
+html[data-theme="dark"] .bg-rose-100 { background-color: rgba(244,63,94, .16); }
+html[data-theme="dark"] .bg-rose-200 { background-color: rgba(244,63,94, .24); }
+html[data-theme="dark"] :is(.text-rose-700, .text-rose-800, .text-rose-900) { color: #fda4af; }
+html[data-theme="dark"] .bg-red-50 { background-color: rgba(239,68,68, .12); }
+html[data-theme="dark"] .bg-red-100 { background-color: rgba(239,68,68, .16); }
+html[data-theme="dark"] .bg-red-200 { background-color: rgba(239,68,68, .24); }
+html[data-theme="dark"] :is(.text-red-700, .text-red-800, .text-red-900) { color: #fca5a5; }
+html[data-theme="dark"] .bg-sky-50 { background-color: rgba(14,165,233, .12); }
+html[data-theme="dark"] .bg-sky-100 { background-color: rgba(14,165,233, .16); }
+html[data-theme="dark"] .bg-sky-200 { background-color: rgba(14,165,233, .24); }
+html[data-theme="dark"] :is(.text-sky-700, .text-sky-800, .text-sky-900) { color: #7dd3fc; }
+html[data-theme="dark"] .bg-amber-50 { background-color: rgba(245,158,11, .12); }
+html[data-theme="dark"] .bg-amber-100 { background-color: rgba(245,158,11, .16); }
+html[data-theme="dark"] .bg-amber-200 { background-color: rgba(245,158,11, .24); }
+html[data-theme="dark"] :is(.text-amber-700, .text-amber-800, .text-amber-900) { color: #fcd34d; }
+html[data-theme="dark"] .bg-orange-50 { background-color: rgba(249,115,22, .12); }
+html[data-theme="dark"] .bg-orange-100 { background-color: rgba(249,115,22, .16); }
+html[data-theme="dark"] .bg-orange-200 { background-color: rgba(249,115,22, .24); }
+html[data-theme="dark"] :is(.text-orange-700, .text-orange-800, .text-orange-900) { color: #fdba74; }
+html[data-theme="dark"] .bg-yellow-50 { background-color: rgba(234,179,8, .12); }
+html[data-theme="dark"] .bg-yellow-100 { background-color: rgba(234,179,8, .16); }
+html[data-theme="dark"] .bg-yellow-200 { background-color: rgba(234,179,8, .24); }
+html[data-theme="dark"] :is(.text-yellow-700, .text-yellow-800, .text-yellow-900) { color: #fde047; }
+html[data-theme="dark"] .bg-violet-50 { background-color: rgba(139,92,246, .12); }
+html[data-theme="dark"] .bg-violet-100 { background-color: rgba(139,92,246, .16); }
+html[data-theme="dark"] .bg-violet-200 { background-color: rgba(139,92,246, .24); }
+html[data-theme="dark"] :is(.text-violet-700, .text-violet-800, .text-violet-900) { color: #c4b5fd; }
+html[data-theme="dark"] .bg-teal-50 { background-color: rgba(20,184,166, .12); }
+html[data-theme="dark"] .bg-teal-100 { background-color: rgba(20,184,166, .16); }
+html[data-theme="dark"] .bg-teal-200 { background-color: rgba(20,184,166, .24); }
+html[data-theme="dark"] :is(.text-teal-700, .text-teal-800, .text-teal-900) { color: #5eead4; }
+
+/* 추천 결과가 바뀔 때 살짝 떠오르는 전환 */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.28s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+}
+
+/* ---------- 마크다운(메모장) ---------- */
+.md {
+  line-height: 1.7;
+  word-break: break-word;
+}
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md h1 { font-size: 1.6em; font-weight: 700; margin: 1.2em 0 0.5em; }
+.md h2 { font-size: 1.35em; font-weight: 700; margin: 1.1em 0 0.45em; padding-bottom: 0.2em; border-bottom: 1px solid var(--color-gray-200); }
+.md h3 { font-size: 1.15em; font-weight: 600; margin: 1em 0 0.4em; }
+.md h4, .md h5, .md h6 { font-weight: 600; margin: 0.9em 0 0.3em; }
+.md p { margin: 0.6em 0; }
+.md ul { list-style: disc; padding-left: 1.5em; margin: 0.6em 0; }
+.md ol { list-style: decimal; padding-left: 1.5em; margin: 0.6em 0; }
+.md li { margin: 0.2em 0; }
+.md ul.contains-task-list { list-style: none; padding-left: 0.2em; }
+.md li > input[type="checkbox"] { margin-right: 0.45em; }
+.md blockquote { border-left: 3px solid var(--color-gray-300); padding-left: 1em; margin: 0.8em 0; color: var(--color-gray-600); }
+.md code { font-family: var(--font-mono), ui-monospace, monospace; font-size: 0.88em; background: var(--color-gray-100); padding: 0.15em 0.4em; border-radius: 0.3em; }
+.md pre { background: var(--color-gray-100); padding: 0.9em 1em; border-radius: 0.6em; overflow-x: auto; margin: 0.8em 0; }
+.md pre code { background: none; padding: 0; }
+.md hr { border: 0; border-top: 1px solid var(--color-gray-200); margin: 1.2em 0; }
+.md a { color: var(--color-indigo-600); text-decoration: underline; }
+.md table { border-collapse: collapse; margin: 0.8em 0; }
+.md th, .md td { border: 1px solid var(--color-gray-200); padding: 0.35em 0.7em; }
+.md th { background: var(--color-gray-100); font-weight: 600; }
+.md img { max-width: 100%; }
+.md del { color: var(--color-gray-500); }

@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { logout, useProfile } from "@/lib/onboarding";
 import { PLATFORMS, setTheme, THEMES, usePlatforms, useTheme } from "@/lib/prefs";
 
 export default function UserMenu() {
+  const router = useRouter();
+  const profile = useProfile();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -46,16 +50,42 @@ export default function UserMenu() {
       {open && (
         <div role="menu" className="absolute right-0 z-50 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
           <div className="px-3 py-2">
-            <div className="text-sm font-semibold">hyeonwoo</div>
+            <div className="text-sm font-semibold">{profile?.name ?? "hyeonwoo"}</div>
             <div className="text-xs text-gray-400">{platforms.map((p) => PLATFORMS.find((x) => x.id === p)?.label).join(" · ")}</div>
           </div>
           <div className="my-1 border-t border-gray-100" />
           <Link href="/me" role="menuitem" onClick={() => setOpen(false)} className={item}>
             마이페이지
           </Link>
+          <Link href="/onboarding" role="menuitem" onClick={() => setOpen(false)} className={item}>
+            시작 맵기 다시 정하기
+          </Link>
           <Link href="/settings" role="menuitem" onClick={() => setOpen(false)} className={item}>
             설정
           </Link>
+          <div className="my-1 border-t border-gray-100" />
+          {profile ? (
+            <button
+              role="menuitem"
+              onClick={() => {
+                logout();
+                setOpen(false);
+                router.push("/");
+              }}
+              className={`${item} w-full text-left`}
+            >
+              로그아웃
+            </button>
+          ) : (
+            <>
+              <Link href="/login" role="menuitem" onClick={() => setOpen(false)} className={item}>
+                로그인
+              </Link>
+              <Link href="/signup" role="menuitem" onClick={() => setOpen(false)} className={item}>
+                회원가입
+              </Link>
+            </>
+          )}
           <div className="my-1 border-t border-gray-100" />
           <div className="px-3 pb-1 pt-2 text-xs text-gray-400">테마</div>
           <div className="flex gap-2 px-3 pb-2">

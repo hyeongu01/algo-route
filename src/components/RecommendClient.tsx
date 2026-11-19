@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PlatformBadge, Tag } from "@/components/ui";
+import { FADE_SOLVES } from "@/lib/initial-spice";
+import { useOnboarding, usePrior } from "@/lib/onboarding";
 import { usePlatforms } from "@/lib/prefs";
 import { useRecords } from "@/lib/records";
 import { effective, MODES, recommendBy, type RecMode } from "@/lib/recommend";
@@ -46,14 +48,16 @@ const Pill = ({ children }: { children: React.ReactNode }) => (
 export default function RecommendClient({ catalog, stats }: { catalog: Problem[]; stats: HeroStats }) {
   const records = useRecords();
   const platforms = usePlatforms();
+  const onboarding = useOnboarding();
+  const { prior, weight } = usePrior();
   const [mode, setMode] = useState<RecMode | null>(null);
   const [passed, setPassed] = useState<Record<string, true>>({});
 
   const list = useMemo(() => effective(catalog, records), [catalog, records]);
   // 방식별 추천 후보 (카드의 개수 표시와 선택 시 결과에 같이 씀)
   const byMode = useMemo(
-    () => Object.fromEntries(MODES.map((m) => [m.v, recommendBy(m.v, list, records, platforms)])) as Record<RecMode, ReturnType<typeof recommendBy>>,
-    [list, records, platforms],
+    () => Object.fromEntries(MODES.map((m) => [m.v, recommendBy(m.v, list, records, platforms, prior)])) as Record<RecMode, ReturnType<typeof recommendBy>>,
+    [list, records, platforms, prior],
   );
 
   const all = mode ? byMode[mode] : [];
@@ -87,6 +91,21 @@ export default function RecommendClient({ catalog, stats }: { catalog: Problem[]
           </div>
         </div>
       </section>
+
+      {onboarding ? (
+        weight > 0 && (
+          <p className="rounded-lg border border-orange-100 bg-orange-50 px-4 py-2 text-sm text-orange-800">
+            🌶 시작 맵기 <b>{onboarding.spice.toFixed(1)}</b>를 추천에 반영 중이에요 · 영향력 {Math.round(weight * 100)}% (직접 {FADE_SOLVES}문제를 풀면 사라져요)
+          </p>
+        )
+      ) : (
+        <p className="flex flex-wrap items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-2 text-sm text-indigo-800">
+          내 맵기를 아직 정하지 않았어요.
+          <Link href="/onboarding" className="font-semibold underline">
+            문제 몇 개로 시작 맵기 정하기 →
+          </Link>
+        </p>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {MODES.map((m) => {

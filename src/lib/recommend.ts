@@ -1,4 +1,5 @@
 import { ALL_TAGS, TODAY } from "./analysis";
+import { blendSpice, type Prior } from "./initial-spice";
 import type { SolveRecord } from "./records";
 import type { Platform, Problem, Recommendation, Spice } from "./types";
 
@@ -96,12 +97,13 @@ function nearest(pool: Problem[], tag: string, target: number, used: Set<string>
 const clamp = (n: number) => Math.min(5, Math.max(1, Math.round(n))) as Spice;
 
 /** platforms: 추천 대상 플랫폼. 풀이 통계(복습/약점 판단)는 전체 기록을 쓰고, 추천되는 문제만 거른다. */
-export function recommendBy(mode: RecMode, list: Problem[], records: Record<string, SolveRecord>, platforms: Platform[]): Recommendation[] {
+export function recommendBy(mode: RecMode, list: Problem[], records: Record<string, SolveRecord>, platforms: Platform[], prior: Prior | null = null): Recommendation[] {
   const ok = (p: Problem) => platforms.includes(p.platform);
   const pool = list.filter((p) => p.status === "unsolved" && ok(p));
   const stats = topics(list);
   const solvedList = list.filter((p) => p.status === "solved");
-  const overall = solvedList.length ? solvedList.reduce((a, p) => a + p.spice, 0) / solvedList.length : 2;
+  // 온보딩 초기 맵기는 풀이가 쌓일수록 영향력이 줄어 사라진다 (initial-spice.ts)
+  const overall = blendSpice(solvedList.length ? solvedList.reduce((a, p) => a + p.spice, 0) / solvedList.length : null, prior);
   const used = new Set<string>();
   const out: Recommendation[] = [];
   const add = (problem: Problem | undefined, reason: string) => {
@@ -148,11 +150,12 @@ export function recommendBy(mode: RecMode, list: Problem[], records: Record<stri
       .filter((r) => spiceOf.has(r.problemId))
       .sort((a, b) => b.at.localeCompare(a.at))
       .slice(0, 5);
-    const base = recent.length
+    const measured = recent.length
       ? recent.reduce((a, r) => a + spiceOf.get(r.problemId)!, 0) / recent.length
       : solvedList.length
         ? [...solvedList].sort((a, b) => b.lastDate.localeCompare(a.lastDate)).slice(0, 5).reduce((a, p) => a + p.spice, 0) / Math.min(5, solvedList.length)
-        : 2;
+        : null;
+    const base = blendSpice(measured, prior);
     let step = 0;
     let why = "기록이 적어 최근 풀던 맵기를 유지해요";
     if (recent.length >= 3) {

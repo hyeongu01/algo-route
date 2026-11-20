@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>algo-route 기획서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: 좌측 고정 목차 + 우측 본문. 모바일에서는 목차가 위로 올라가 가로 스크롤 칩이 된다. */
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #eef0f4;
+    --fg: #1b1f27;
+    --muted: #5b6372;
+    --line: #dfe3ea;
+    --accent: #d23a1c;
+    --accent-soft: #fbe6e1;
+    --ok: #1d7a4a;
+    --ok-soft: #dff3e8;
+    --warn: #96600a;
+    --warn-soft: #fbefd5;
+    --open: #4a5266;
+    --open-soft: #e6e9f0;
+    --code-bg: #12161d;
+    --code-fg: #e4e8ef;
+    --font-body: "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-head: "Space Grotesk", "Noto Sans KR", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141a;
+      --surface: #181c24;
+      --surface-2: #1f2430;
+      --fg: #e6e9ef;
+      --muted: #9aa3b3;
+      --line: #2a303c;
+      --accent: #ff6a4a;
+      --accent-soft: #3a1d17;
+      --ok: #5fd39a;
+      --ok-soft: #14301f;
+      --warn: #f0be5a;
+      --warn-soft: #33270d;
+      --open: #aeb7c9;
+      --open-soft: #262c39;
+      --code-bg: #0b0e13;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141a;
+    --surface: #181c24;
+    --surface-2: #1f2430;
+    --fg: #e6e9ef;
+    --muted: #9aa3b3;
+    --line: #2a303c;
+    --accent: #ff6a4a;
+    --accent-soft: #3a1d17;
+    --ok: #5fd39a;
+    --ok-soft: #14301f;
+    --warn: #f0be5a;
+    --warn-soft: #33270d;
+    --open: #aeb7c9;
+    --open-soft: #262c39;
+    --code-bg: #0b0e13;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.7;
+    padding-block: 0;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: var(--font-mono); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 28px 80px;
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 48px;
+  }
+
+  /* 목차 */
+  nav.toc { position: sticky; top: 24px; align-self: start; font-size: 13px; }
+  nav.toc .brand { font-family: var(--font-head); font-weight: 700; font-size: 17px; margin-bottom: 4px; }
+  nav.toc .updated { color: var(--muted); font-size: 12px; margin-bottom: 18px; }
+  nav.toc ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  nav.toc a { display: block; padding: 5px 10px; border-radius: 6px; color: var(--muted); text-decoration: none; }
+  nav.toc a:hover { background: var(--surface-2); color: var(--fg); }
+
+  main { min-width: 0; display: flex; flex-direction: column; gap: 56px; }
+
+  header.top h1 {
+    font-family: var(--font-head);
+    font-size: clamp(28px, 4.2vw, 40px);
+    line-height: 1.2;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  header.top p.lead { color: var(--muted); font-size: 16px; margin: 0; max-width: 62ch; }
+
+  section h2 {
+    font-family: var(--font-head);
+    font-size: 22px;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  section .sub { color: var(--muted); margin: 0 0 18px; max-width: 66ch; }
+  section h3 { font-size: 15px; margin: 26px 0 8px; }
+  p { margin: 0 0 12px; max-width: 70ch; }
+  ul.plain { margin: 0 0 12px; padding-left: 20px; max-width: 70ch; }
+  ul.plain li { margin-bottom: 4px; }
+
+  /* 상태 칩 */
+  .chip {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 1px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    line-height: 1.7;
+  }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip.open { background: var(--open-soft); color: var(--open); }
+
+  /* 표 */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 700; background: var(--surface-2); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  td code, p code, li code { background: var(--surface-2); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; }
+
+  /* 다이어그램, 코드 */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* 강조 박스 */
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    max-width: 72ch;
+    margin: 14px 0;
+  }
+  .note p { margin: 0; }
+
+  /* 단계 */
+  .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .phase { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+  .phase h3 { margin: 0 0 8px; font-family: var(--font-head); font-size: 16px; }
+  .phase ul { margin: 0; padding-left: 18px; font-size: 13.5px; }
+  .phase.now { border-color: var(--accent); }
+
+  /* 테이블 카드 (ERD 컬럼 목록) */
+  .tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 18px; }
+  .tcard { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; overflow: hidden; }
+  .tcard h4 { margin: 0; padding: 10px 14px; font-family: var(--font-mono); font-size: 13px; background: var(--surface-2); }
+  .tcard h4 span { color: var(--muted); font-family: var(--font-body); font-weight: 400; font-size: 12px; margin-left: 8px; }
+  .tcard dl { margin: 0; padding: 8px 14px 12px; font-size: 12.5px; }
+  .tcard dl div { display: flex; gap: 10px; padding: 3px 0; }
+  .tcard dt { font-family: var(--font-mono); flex: 0 0 auto; min-width: 9.5em; }
+  .tcard dd { margin: 0; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+
+  footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 18px; }
+
+  @media (max-width: 880px) {
+    .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 20px 60px; }
+    nav.toc { position: static; }
+    nav.toc ul { flex-direction: row; overflow-x: auto; gap: 6px; padding-bottom: 6px; }
+    nav.toc a { white-space: nowrap; background: var(--surface); border: 1px solid var(--line); }
+    .tcard dt { min-width: 8em; }
+  }
+  @media (max-width: 480px) {
+    .tcard dl div { flex-direction: column; gap: 0; }
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <nav class="toc" aria-label="목차">
+    <div class="brand">algo-route</div>
+    <div class="updated">마지막 갱신 2026-11-20</div>
+    <ul>
+      <li><a href="#overview">개요</a></li>
+      <li><a href="#stack">기술 스택</a></li>
+      <li><a href="#architecture">아키텍처</a></li>
+      <li><a href="#rendering">렌더링 전략</a></li>
+      <li><a href="#auth">인증</a></li>
+      <li><a href="#ai-eval">AI 평가</a></li>
+      <li><a href="#erd">데이터 모델</a></li>
+      <li><a href="#phases">개발 단계</a></li>
+      <li><a href="#decisions">결정 기록</a></li>
+      <li><a href="#next">다음 단계</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <header class="top">
+      <h1>algo-route 기획서</h1>
+      <p class="lead">라면 맵기로 난이도를 매기는 알고리즘 문제 추천 서비스. 이 문서가 기획의 기준이고, 결정이 날 때마다 여기에 반영한다.</p>
+    </header>
+
+    <section id="overview">
+      <h2>개요</h2>
+      <p class="sub">프론트는 Next.js(이 레포), 백엔드는 Java Spring Boot(새 레포)로 나눠 만든다.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>항목</th><th>내용</th></tr>
+          <tr><td>서비스</td><td>사용자의 실력에 맞는 문제를 추천하고, 풀이 기록을 AI가 평가해 쌓아주는 서비스</td></tr>
+          <tr><td>난이도</td><td>서비스 고유 난이도 <b>맵기 1~5</b> (순한맛 안성탕면 ~ 극강 매운맛 핵불닭볶음면). 관리자가 조정</td></tr>
+          <tr><td>문제 출처</td><td>프로그래머스, 리트코드. 문제 본문은 가져오지 않고 <b>링크를 첨부</b>하며, 관리자 또는 크롤러가 메타데이터만 내 DB에 저장</td></tr>
+          <tr><td>채점</td><td>직접 채점하지 않는다. 사용자가 외부 사이트에서 푼 뒤 <b>"풀었어요"</b>를 누르면 코드와 메모를 AI가 평가해 기록</td></tr>
+          <tr><td>추천</td><td>내 DB의 문제를 기반으로 복습, 약점 보강, 새 개념, 재도전, 적응형, 간격 반복 방식으로 추천</td></tr>
+          <tr><td>현재 프론트 상태</td><td>목 데이터(<code>src/data/*</code>)와 브라우저 localStorage 기반. 백엔드가 붙으면 API로 교체</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="stack">
+      <h2>기술 스택</h2>
+      <p class="sub">개발자는 NestJS 1년차이고 Prisma, MySQL, Redis에 익숙하다. 이번엔 Spring 생태계 학습이 목적에 포함된다.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>영역</th><th>선택</th><th>상태</th></tr>
+          <tr><td>백엔드</td><td>Java 21, Spring Boot 3.x, Spring Web, Validation, Security</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>ORM</td><td>JPA(Hibernate), Spring Data JPA, QueryDSL</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>RDB</td><td>MySQL 8</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>캐시, 세션, 랭킹</td><td>Redis</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>프론트</td><td>Next.js 16 (React 19), Cache Components 사용</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>마이그레이션</td><td>Flyway (SQL 파일 방식, Prisma Migrate에 가장 가까움)</td><td><span class="chip warn">제안</span></td></tr>
+          <tr><td>API 문서</td><td>springdoc-openapi, 프론트는 <code>openapi-typescript</code>로 타입 생성</td><td><span class="chip warn">제안</span></td></tr>
+          <tr><td>빌드, 테스트</td><td>Gradle(Kotlin DSL), JUnit 5, Testcontainers(MySQL, Redis)</td><td><span class="chip warn">제안</span></td></tr>
+          <tr><td>패키지 구조</td><td>도메인별 (<code>user</code>, <code>problem</code>, <code>record</code>, <code>recommend</code>…)</td><td><span class="chip warn">제안</span></td></tr>
+          <tr><td>로컬 개발 환경</td><td>Docker Compose (MySQL, Redis)</td><td><span class="chip warn">제안</span></td></tr>
+        </table>
+      </div>
+      <h3>JPA 사용 시 주의</h3>
+      <ul class="plain">
+        <li>Prisma와 달리 연관관계에 접근하면 몰래 쿼리가 나간다. N+1 문제는 <code>fetch join</code>, <code>@EntityGraph</code>로 다룬다.</li>
+        <li><code>ddl-auto</code>는 개발 초기에만 쓰고, 이후에는 Flyway로 스키마를 고정한다.</li>
+      </ul>
+    </section>
+
+    <section id="architecture">
+      <h2>아키텍처</h2>
+      <p class="sub">프론트와 백엔드는 레포를 분리한다. 브라우저는 Next 한 곳만 호출하고, Next가 <code>/api/**</code>를 Spring으로 넘긴다(rewrites).</p>
+      <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  B["브라우저"] -->|"페이지, /api/**"| N["Next.js 16"]
+  N -->|"rewrites /api/**"| S["Spring Boot"]
+  N -.->|"서버 컴포넌트 공개 API 호출"| S
+  S --> M[("MySQL 8")]
+  S --> R[("Redis: 세션, 캐시, 랭킹")]
+  S -->|"비동기 평가 요청"| A["Anthropic API"]
+  C["관리자, 크롤러"] --> S
+</pre>
+      </div>
+      <h3>같은 오리진 프록시를 쓰는 이유</h3>
+      <ul class="plain">
+        <li>CORS 설정이 필요 없고, 세션 쿠키가 항상 first-party라 <code>SameSite</code> 문제가 생기지 않는다.</li>
+        <li>서버 컴포넌트에서 인증이 필요한 API를 부를 때는 <code>cookies()</code>로 읽은 세션 쿠키를 <code>Cookie</code> 헤더에 실어 Spring에 전달한다.</li>
+        <li>Next의 <code>proxy.ts</code>(구 middleware)는 UX용 리다이렉트에만 쓴다. 실제 인가는 Spring이 한다.</li>
+      </ul>
+      <h3>API 구분</h3>
+      <ul class="plain">
+        <li><b>공개 API</b> (<code>/api/public/**</code>): 인증 없이 호출. 서버 컴포넌트에서 쿠키 전달 없이 쓰고 <code>Cache-Control</code>을 신경 쓴다.</li>
+        <li><b>인증 API</b>: 세션 필요. 주로 브라우저(CSR)에서 호출.</li>
+        <li><b>관리자 API</b>: <code>ROLE_ADMIN</code> 필요.</li>
+      </ul>
+    </section>
+
+    <section id="rendering">
+      <h2>렌더링 전략</h2>
+      <p class="sub">Next 16의 Cache Components에서는 한 페이지 안에 정적 셸, 캐시된 데이터, 요청 시점 스트리밍, 클라이언트 상호작용이 섞인다. 페이지 단위가 아니라 "이 데이터가 누구에게나 같은가"로 나눈다.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>페이지</th><th>방식</th><th>이유</th></tr>
+          <tr><td><code>(home)</code> 홈</td><td>정적 + 필요한 곳만 <code>use cache</code></td><td>누구에게나 같고 SEO 필요. 최근 질문 미리보기만 캐시된 fetch(5~10분)로 교체</td></tr>
+          <tr><td><code>problems</code> 목록</td><td>SSR + 캐시, 필터는 URL 쿼리</td><td>공개 데이터, 검색 노출</td></tr>
+          <tr><td><code>problems/[id]</code> 상세</td><td>SSR + 캐시(문제 정보), CSR(내 풀이, 메모)</td><td>공개 부분은 서버, 개인 부분은 클라이언트 컴포넌트</td></tr>
+          <tr><td><code>problems/[id]/qna</code></td><td>SSR 목록 + CSR 작성</td><td>공개 콘텐츠</td></tr>
+          <tr><td><code>ranking</code></td><td>SSR + 짧은 캐시(약 1분)</td><td>모두에게 같고 Redis 값을 감싸 보여줌</td></tr>
+          <tr><td><code>login</code>, <code>signup</code>, <code>onboarding</code></td><td>CSR</td><td>상호작용 위주</td></tr>
+          <tr><td><code>recommend</code>, <code>my</code>, <code>me</code>, <code>settings</code></td><td>CSR (TanStack Query)</td><td>유저별 데이터라 캐시 불가, SEO 불필요</td></tr>
+          <tr><td><code>admin/*</code></td><td>CSR</td><td>내부 도구</td></tr>
+        </table>
+      </div>
+      <div class="note"><p>홈의 <code>HomeHeader</code>, <code>HomeCta</code>는 이미 클라이언트 컴포넌트라 로그인 상태가 정적 셸을 깨지 않는다. 홈에 <code>cookies()</code>를 넣으면 페이지가 동적으로 바뀌므로 넣지 않는다.</p></div>
+    </section>
+
+    <section id="auth">
+      <h2>인증</h2>
+      <p class="sub">세션 방식으로 확정. 웹 전용이고 같은 오리진 프록시 구조라 세션이 가장 단순하고 안전하다.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>항목</th><th>내용</th><th>상태</th></tr>
+          <tr><td>방식</td><td>Spring Session + Redis, HttpOnly 쿠키(<code>SameSite=Lax</code>)</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>1차 소셜 로그인</td><td>Google (Spring Security OAuth2 Client)</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>2차 소셜 로그인</td><td>GitHub. <code>user_auth_provider</code> 테이블에 행만 추가하면 되도록 설계</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>이메일/비밀번호 가입</td><td>프론트에 <code>LoginForm</code>, <code>SignupForm</code>이 이미 있음. 유지하면 <code>password_hash</code> 필요</td><td><span class="chip open">미정</span></td></tr>
+          <tr><td>인가</td><td>Spring Security가 책임. <code>proxy.ts</code>는 UX 가드용</td><td><span class="chip ok">확정</span></td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="ai-eval">
+      <h2>AI 평가</h2>
+      <p class="sub">LLM 호출은 느리고 실패할 수 있어서 비동기로 처리한다. 사용자는 바로 응답을 받고, 평가 결과는 나중에 채워진다.</p>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  participant U as 사용자
+  participant API as Spring Boot
+  participant DB as MySQL
+  participant W as 평가 작업
+  participant AI as Anthropic API
+  U->>API: 풀었어요 (코드, 메모, 소요시간)
+  API->>DB: solve_attempt 저장, ai_evaluation PENDING
+  API-->>U: 즉시 응답 (attemptId)
+  W->>AI: 구조화된 출력으로 평가 요청
+  AI-->>W: JSON 결과
+  W->>DB: ai_evaluation DONE 또는 FAILED
+  U->>API: 결과 조회 (폴링)
+  API-->>U: 평가 결과
+</pre>
+      </div>
+      <h3>평가 결과 형식</h3>
+      <pre class="code">{
+  "isCorrect": true,
+  "timeComplexity": "O(n)",
+  "qualityComment": "해시맵으로 중복을 O(1)에 검사한 점이 좋습니다.",
+  "improvements": ["변수명을 의미 있게 바꾸면 읽기 쉬워집니다."]
+}</pre>
+      <h3>설계 원칙</h3>
+      <ul class="plain">
+        <li>평가는 <code>PENDING → DONE | FAILED</code> 상태를 가진다. 처음엔 Spring <code>@Async</code> 또는 DB 테이블 기반 작업 큐로 충분하고, Kafka는 쓰지 않는다.</li>
+        <li>유저별 일일 평가 횟수를 Redis 카운터로 제한한다. 비용 폭주를 막는 장치다.</li>
+        <li>사용자가 낸 코드와 메모에는 프롬프트 인젝션이 섞일 수 있다. 출력은 JSON 스키마로 강제하고 검증한다.</li>
+        <li>AI가 틀릴 수 있어서 <b>사용자의 <code>status</code>와 AI의 <code>is_correct</code>를 둘 다 저장</b>한다. 맵기와 통계에는 <code>status</code>를 우선 쓰고, <code>is_correct = false</code>면 화면에 경고만 보여주는 안을 제안한다.</li>
+      </ul>
+    </section>
+
+    <section id="erd">
+      <h2>데이터 모델</h2>
+      <p class="sub">1차 범위의 테이블이다. 스트릭, 주간 풀이 수, 성공률, 랭킹은 파생값이라 테이블을 만들지 않고 쿼리로 계산하며, 랭킹은 나중에 Redis로 올린다. 세션은 Redis에 있어 DB 테이블이 없다.</p>
+      <div class="diagram">
+<pre class="mermaid">
+erDiagram
+  USER ||--o{ USER_AUTH_PROVIDER : has
+  USER ||--|| USER_SETTING : has
+  USER ||--o{ SOLVE_ATTEMPT : makes
+  PROBLEM ||--o{ SOLVE_ATTEMPT : receives
+  PROBLEM ||--o{ PROBLEM_TAG : has
+  TAG ||--o{ PROBLEM_TAG : labels
+  SOLVE_ATTEMPT ||--o| AI_EVALUATION : evaluated_by
+
+  USER {
+    bigint id PK
+    string email UK
+    string nickname UK
+    string role
+    decimal initial_spice
+  }
+  USER_AUTH_PROVIDER {
+    bigint id PK
+    bigint user_id FK
+    string provider
+    string provider_user_id
+  }
+  PROBLEM {
+    bigint id PK
+    string platform
+    string external_id
+    string title
+    string url
+    int spice
+  }
+  SOLVE_ATTEMPT {
+    bigint id PK
+    bigint user_id FK
+    bigint problem_id FK
+    string status
+    string lang
+    text code
+    text memo
+    int seconds
+    string blocker
+  }
+  AI_EVALUATION {
+    bigint id PK
+    bigint attempt_id FK
+    string status
+    boolean is_correct
+    string time_complexity
+    text quality_comment
+    json improvements
+  }
+</pre>
+      </div>
+
+      <div class="tables">
+        <div class="tcard"><h4>user<span>회원</span></h4><dl>
+          <div><dt>id</dt><dd>BIGINT PK</dd></div>
+          <div><dt>email</dt><dd>UNIQUE</dd></div>
+          <div><dt>nickname</dt><dd>UNIQUE</dd></div>
+          <div><dt>password_hash</dt><dd>NULL 허용 (이메일 가입 유지 여부에 따라)</dd></div>
+          <div><dt>role</dt><dd>USER / ADMIN</dd></div>
+          <div><dt>initial_spice</dt><dd>DECIMAL(2,1) NULL, 온보딩으로 추정한 초기 맵기</dd></div>
+          <div><dt>created_at, updated_at</dt><dd>JPA Auditing</dd></div>
+        </dl></div>
+        <div class="tcard"><h4>user_auth_provider<span>소셜 로그인 연결</span></h4><dl>
+          <div><dt>user_id</dt><dd>FK</dd></div>
+          <div><dt>provider</dt><dd>GOOGLE / GITHUB</dd></div>
+          <div><dt>provider_user_id</dt><dd>UNIQUE(provider, provider_user_id)</dd></div>
+        </dl></div>
+        <div class="tcard"><h4>user_setting<span>1:1</span></h4><dl>
+          <div><dt>user_id</dt><dd>PK, FK</dd></div>
+          <div><dt>default_lang</dt><dd>java / python / cpp / javascript</dd></div>
+          <div><dt>editor_size</dt><dd>sm / md / lg</dd></div>
+          <div><dt>theme</dt><dd>light / dark / ramen / mint</dd></div>
+          <div><dt>platforms</dt><dd>JSON 또는 별도 테이블</dd></div>
+        </dl></div>
+        <div class="tcard"><h4>problem<span>문제</span></h4><dl>
+          <div><dt>platform</dt><dd>LEETCODE / PROGRAMMERS</dd></div>
+          <div><dt>external_id</dt><dd>플랫폼 쪽 식별자(슬러그). UNIQUE(platform, external_id)</dd></div>
+          <div><dt>title, url</dt><dd>링크만 첨부, 본문은 저장하지 않음</dd></div>
+          <div><dt>spice</dt><dd>TINYINT 1~5, 관리자가 조정</dd></div>
+        </dl></div>
+        <div class="tcard"><h4>tag, problem_tag<span>태그</span></h4><dl>
+          <div><dt>tag.name</dt><dd>UNIQUE (예: sliding-window)</dd></div>
+          <div><dt>problem_tag</dt><dd>(problem_id, tag_id) 복합 PK. 태그로 추천 쿼리를 하므로 JSON이 아닌 테이블</dd></div>
+        </dl></div>
+        <div class="tcard"><h4>solve_attempt<span>풀이 시도, 문제당 여러 번</span></h4><dl>
+          <div><dt>user_id, problem_id</dt><dd>FK, INDEX(user_id, problem_id, attempted_at DESC)</dd></div>
+          <div><dt>status</dt><dd>SOLVED / FAILED (사용자 선언)</dd></div>
+          <div><dt>lang, code, memo</dt><dd>코드와 메모는 TEXT</dd></div>
+          <div><dt>seconds</dt><dd>소요 시간</dd></div>
+          <div><dt>blocker</dt><dd>실패 시 막힌 지점. 약점 추천에 사용</dd></div>
+          <div><dt>attempted_at</dt><dd>시도 시각</dd></div>
+        </dl></div>
+        <div class="tcard"><h4>ai_evaluation<span>시도와 1:1</span></h4><dl>
+          <div><dt>attempt_id</dt><dd>UNIQUE FK</dd></div>
+          <div><dt>status</dt><dd>PENDING / DONE / FAILED</dd></div>
+          <div><dt>is_correct</dt><dd>BOOL NULL</dd></div>
+          <div><dt>time_complexity</dt><dd>VARCHAR NULL</dd></div>
+          <div><dt>quality_comment</dt><dd>TEXT NULL</dd></div>
+          <div><dt>improvements</dt><dd>JSON NULL, 개선사항이 있을 때만</dd></div>
+          <div><dt>model, prompt_version</dt><dd>재현과 비교용</dd></div>
+          <div><dt>raw_response, error_message</dt><dd>디버깅용</dd></div>
+          <div><dt>requested_at, completed_at</dt><dd>소요 시간 추적</dd></div>
+        </dl></div>
+      </div>
+
+      <h3>프론트 타입과의 대응</h3>
+      <div class="tablewrap">
+        <table>
+          <tr><th>프론트</th><th>백엔드</th></tr>
+          <tr><td><code>Problem.id = "leetcode:slug"</code></td><td><code>platform</code>과 <code>external_id</code>로 분해. 경로용 id는 이 조합</td></tr>
+          <tr><td><code>Problem.status / attempts / firstDate / lastDate</code></td><td>컬럼이 아니라 유저별 파생값. <code>solve_attempt</code>를 집계해 응답에 붙임</td></tr>
+          <tr><td><code>Analysis</code> (loopDepth, recursion, patterns…)</td><td>휴리스틱 목업이라 폐기. <code>ai_evaluation</code> 필드로 대체</td></tr>
+          <tr><td>온보딩 초기 맵기, 풀이 수</td><td><code>user.initial_spice</code>. 풀이 수는 <code>solve_attempt</code>에서 계산</td></tr>
+          <tr><td><code>blocker</code></td><td><code>solve_attempt.blocker</code> (실패 시도에만)</td></tr>
+          <tr><td>테마, 에디터 크기, 기본 언어</td><td><code>user_setting</code>. 비로그인일 때는 localStorage 유지</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="phases">
+      <h2>개발 단계</h2>
+      <p class="sub">1차에서 핵심 루프(가입, 문제, 풀이 기록, 평가, 추천)를 끝낸다.</p>
+      <div class="phases">
+        <div class="phase now">
+          <h3>1차 <span class="chip warn">현재</span></h3>
+          <ul>
+            <li>인증 (세션 + Google)</li>
+            <li>문제 CRUD, 관리자 수동 등록</li>
+            <li>풀이 기록, AI 평가</li>
+            <li>추천 (맵기 계산 포함)</li>
+            <li>온보딩 초기 맵기</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <h3>2차</h3>
+          <ul>
+            <li>Q&amp;A, 게시판 (스포일러 플래그, 채택 답변)</li>
+            <li>체감 난이도 투표 (<code>spice_vote</code>)</li>
+            <li>랭킹 (Redis Sorted Set)</li>
+            <li>GitHub 로그인</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <h3>3차</h3>
+          <ul>
+            <li>크롤러 (프로그래머스, 리트코드)</li>
+            <li>수집 이력 테이블</li>
+            <li>약관과 robots 정책 확인</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note"><p>맵기와 추천 계산(<code>recommend.ts</code>, <code>initial-spice.ts</code>, <code>analysis.ts</code>)은 서버로 옮기는 것을 권장한다. 그렇게 해야 서버가 신뢰의 원천이 되고 백엔드의 핵심 학습 대상이 된다.</p></div>
+    </section>
+
+    <section id="decisions">
+      <h2>결정 기록</h2>
+      <p class="sub">확정은 되돌리지 않는 한 유지한다. 제안은 동의 시 확정으로, 미정은 논의 후 채운다.</p>
+      <div class="tablewrap">
+        <table>
+          <tr><th>주제</th><th>내용</th><th>상태</th></tr>
+          <tr><td>프론트/백엔드 분리</td><td>레포 분리, Next rewrites로 같은 오리진</td><td><span class="chip warn">제안</span></td></tr>
+          <tr><td>기술 스택</td><td>JPA + Spring Data JPA + QueryDSL, MySQL 8, Redis</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>문제 데이터</td><td>링크 첨부, 관리자/크롤러가 자체 DB에 저장</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>채점</td><td>직접 채점 없음. 사용자 선언 후 AI 평가</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>AI 평가 항목</td><td>정답 여부, 시간복잡도, 코드 품질 코멘트, 개선사항(있을 때)</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>인증</td><td>세션(Redis) + Google, 2차에 GitHub</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>MVP 범위</td><td>1차 인증, 문제, 풀이 기록, 추천 / 2차 Q&amp;A, 랭킹 / 3차 크롤러</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td>렌더링</td><td>공개 페이지는 서버, 개인화 페이지는 CSR</td><td><span class="chip ok">확정</span></td></tr>
+          <tr><td><code>status</code>와 <code>is_correct</code> 불일치 정책</td><td>둘 다 저장, 맵기에는 <code>status</code> 우선, 불일치 시 경고 표시</td><td><span class="chip warn">제안</span></td></tr>
+          <tr><td>이메일/비밀번호 가입 유지</td><td>유지하면 <code>password_hash</code> 필요, 구글 전용이면 폼 단순화</td><td><span class="chip open">미정</span></td></tr>
+          <tr><td>공간복잡도 평가</td><td>필요하면 <code>space_complexity</code> 컬럼 추가</td><td><span class="chip open">미정</span></td></tr>
+          <tr><td>AI 호출 방식</td><td>Spring AI 라이브러리 또는 <code>RestClient</code> 직접 호출, 사용 모델</td><td><span class="chip open">미정</span></td></tr>
+          <tr><td>일일 평가 횟수 제한</td><td>유저당 하루 몇 회</td><td><span class="chip open">미정</span></td></tr>
+          <tr><td>크롤러 위치</td><td>Spring 스케줄러 또는 별도 프로세스 (3차에 결정)</td><td><span class="chip open">미정</span></td></tr>
+          <tr><td>배포 환경</td><td>프론트를 Vercel에 올릴지 직접 서버인지에 따라 프록시 구조가 달라질 수 있음</td><td><span class="chip open">미정</span></td></tr>
+          <tr><td>백엔드 레포</td><td>이름과 위치</td><td><span class="chip open">미정</span></td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="next">
+      <h2>다음 단계</h2>
+      <p class="sub">API 명세를 먼저 잡는 것을 추천한다. 계약이 정해지면 프론트와 백엔드를 병렬로 진행할 수 있다.</p>
+      <ul class="plain">
+        <li><b>B. OpenAPI 초안 작성</b>: 인증, 문제, 풀이 기록, 평가 조회, 추천 엔드포인트. 이후 프론트의 목 데이터를 이 명세 기준으로 교체한다.</li>
+        <li><b>A. Flyway <code>V1__init.sql</code>과 JPA 엔티티 초안</b>: 백엔드 레포가 생긴 뒤 진행한다.</li>
+        <li>그 전에 위 <b>미정</b> 항목 중 이메일 가입 유지 여부와 <code>status</code> 불일치 정책을 정하면 명세에 바로 반영할 수 있다.</li>
+      </ul>
+    </section>
+
+    <footer>algo-route 기획서 · 변경 이력은 결정 기록과 마지막 갱신일로 관리</footer>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.min.js"></script>
+<script>
+  (function () {
+    var root = document.documentElement;
+    var forced = root.getAttribute("data-theme");
+    var dark = forced ? forced === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    mermaid.initialize({ startOnLoad: true, theme: dark ? "dark" : "default", securityLevel: "strict" });
+  })();
+</script>
+</body>
+</html>
